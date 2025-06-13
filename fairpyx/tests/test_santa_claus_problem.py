@@ -9,7 +9,7 @@ This file tests the implementations in santa_claus_problem.py, focusing on
 the O(log log m / log log log m) approximation algorithm for the restricted
 assignment case.
 
-Programmers: [Your Name(s) Here - User will fill this]
+Programmers: Roey and Adiel
 Date: 2025-05-29
 """
 

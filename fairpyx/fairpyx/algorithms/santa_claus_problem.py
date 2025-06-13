@@ -15,7 +15,7 @@ where S_i is the set of presents received by kid i.
 This file focuses on implementing the O(log log m / log log log m) approximation
 algorithm for the restricted assignment case (p_ij in {p_j, 0}).
 
-Programmers: [Your Name(s) Here - User will fill this]
+Programmers: Roey and Adiel
 Date: 2025-05-29
 """
 
