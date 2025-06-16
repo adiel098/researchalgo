@@ -1,0 +1,63 @@
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer {
+  margin-top: auto;
+}
+
+.section-title {
+  margin-bottom: 20px;
+  color: #0d6efd;
+}
+
+.algorithm-description {
+  margin-bottom: 30px;
+}
+
+.card {
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  margin-right: 10px;
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.alert {
+  margin-top: 20px;
+}
+
+.results-container {
+  margin-top: 30px;
+}
+
+.log-entry {
+  margin-bottom: 5px;
+}
+
+.log-entry.info {
+  color: #0d6efd;
+}
+
+.log-entry.error {
+  color: #dc3545;
+}
+
+.log-entry.warning {
+  color: #ffc107;
+}
+
+.table-responsive {
+  margin-bottom: 20px;
+}

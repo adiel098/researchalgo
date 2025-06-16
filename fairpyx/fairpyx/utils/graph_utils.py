@@ -7,7 +7,7 @@ Author: Erel Segal-Halevi
 Since : 2023-10
 """
 
-import networkz as nx
+import networkx as nx
 from collections import defaultdict
 from itertools import product
 
