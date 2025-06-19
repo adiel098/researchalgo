@@ -58,12 +58,23 @@ def api_index():
         }
     })
 
+# הגדרת נתיב כללי שיטפל בכל הבקשות מ-localhost
+@app.route('/localhost:<port>/api/<path:endpoint>', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def proxy_localhost(port, endpoint):
+    # העבר את הבקשה לנתיב המתאים ב-API
+    if endpoint == 'run-algorithm' and request.method == 'POST':
+        return run_algorithm()
+    elif endpoint == 'generate-random' and request.method == 'GET':
+        return generate_random_data()
+    else:
+        return {'error': f'Endpoint not found: {endpoint}'}, 404
+
 # הגדרת נתיבים להגשת קבצים סטטיים
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
-    # אם הנתיב מתחיל ב-api, אל תנסה להגיש קובץ סטטי
-    if path.startswith('api'):
+    # אם הנתיב מתחיל ב-api או localhost, אל תנסה להגיש קובץ סטטי
+    if path.startswith('api') or path.startswith('localhost'):
         return {'error': 'Not Found'}, 404
         
     # נסה להגיש קובץ ספציפי
@@ -73,10 +84,7 @@ def serve(path):
     else:
         return send_from_directory(app.static_folder, 'index.html')
 
-# הוסף נתיב שמעביר בקשות מ-localhost:5000
-@app.route('/localhost:5000/api/run-algorithm', methods=['POST'])
-def proxy_run_algorithm():
-    return run_algorithm()
+# הנתיבים הישנים הוחלפו בנתיב כללי למעלה
 
 @app.route('/api/run-algorithm', methods=['POST'])
 def run_algorithm():
@@ -167,10 +175,7 @@ def create_instance(kids, presents, valuations):
         item_capacities={present: 1 for present in presents}  # Default capacity of 1 kid per item
     )
 
-# הוסף נתיב שמעביר בקשות מ-localhost:5000
-@app.route('/localhost:5000/api/generate-random', methods=['GET'])
-def proxy_generate_random():
-    return generate_random_data()
+# הנתיבים הישנים הוחלפו בנתיב כללי למעלה
 
 @app.route('/api/generate-random', methods=['GET'])
 def generate_random_data():
