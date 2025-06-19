@@ -38,8 +38,15 @@ logger.addHandler(log_handler)
 
 # Create Flask app
 app = Flask(__name__, static_folder='../static')
-CORS(app)  # Enable CORS for all routes
+# הגדר CORS עם תמיכה מלאה
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)  # Enable CORS for all routes
+@app.route('/static/js/<path:filename>')
+def serve_js(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'static/js'), filename)
 
+@app.route('/static/css/<path:filename>')
+def serve_css(filename):
+    return send_from_directory(os.path.join(app.static_folder, 'static/css'), filename)
 # הגדרת נתיב API
 @app.route('/api')
 def api_index():
@@ -65,6 +72,11 @@ def serve(path):
     # אחרת הגש את דף הבית
     else:
         return send_from_directory(app.static_folder, 'index.html')
+
+# הוסף נתיב שמעביר בקשות מ-localhost:5000
+@app.route('/localhost:5000/api/run-algorithm', methods=['POST'])
+def proxy_run_algorithm():
+    return run_algorithm()
 
 @app.route('/api/run-algorithm', methods=['POST'])
 def run_algorithm():
@@ -154,6 +166,11 @@ def create_instance(kids, presents, valuations):
         agent_capacities={kid: 1 for kid in kids},  # Default capacity of 1 item per kid
         item_capacities={present: 1 for present in presents}  # Default capacity of 1 kid per item
     )
+
+# הוסף נתיב שמעביר בקשות מ-localhost:5000
+@app.route('/localhost:5000/api/generate-random', methods=['GET'])
+def proxy_generate_random():
+    return generate_random_data()
 
 @app.route('/api/generate-random', methods=['GET'])
 def generate_random_data():
