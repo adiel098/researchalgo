@@ -9,7 +9,12 @@ import string
 from typing import Dict, List, Set, Tuple, Optional, Any
 
 # Import our simplified Santa Claus algorithm implementation
-from .santa_claus_problem import Instance, AllocationBuilder, divide, santa_claus
+# נסה ייבוא יחסי אם הקוד רץ כחבילה, אחרת נסה ייבוא רגיל
+try:
+    from .santa_claus_problem import Instance, AllocationBuilder, divide, santa_claus
+except ImportError:
+    # אם הייבוא היחסי נכשל, נסה ייבוא רגיל
+    from santa_claus_problem import Instance, AllocationBuilder, divide, santa_claus
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
