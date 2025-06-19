@@ -181,7 +181,7 @@ const InputForm = () => {
       setError('');
       
       // Get random data from the backend
-      const response = await axios.get('http://localhost:5000/api/generate-random');
+      const response = await axios.get('/api/generate-random');
       setFormData(response.data);
     } catch (error) {
       console.error('Error generating random input:', error);
@@ -258,7 +258,7 @@ const InputForm = () => {
       setError('');
       
       // Send the data to the backend
-      const response = await axios.post('http://localhost:5000/api/run-algorithm', formData);
+      const response = await axios.post('/api/run-algorithm', formData);
       
       console.log('Algorithm response received:', response.data);
       
