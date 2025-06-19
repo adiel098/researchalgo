@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import sys
 import os
@@ -9,7 +9,7 @@ import string
 from typing import Dict, List, Set, Tuple, Optional, Any
 
 # Import our simplified Santa Claus algorithm implementation
-from santa_claus_problem import Instance, AllocationBuilder, divide, santa_claus
+from .santa_claus_problem import Instance, AllocationBuilder, divide, santa_claus
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -37,11 +37,12 @@ log_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
 logger.addHandler(log_handler)
 
 # Create Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../static')
 CORS(app)  # Enable CORS for all routes
 
-@app.route('/')
-def index():
+# הגדרת נתיב API
+@app.route('/api')
+def api_index():
     return jsonify({
         'message': 'Santa Claus Algorithm API',
         'endpoints': {
@@ -49,6 +50,21 @@ def index():
             '/api/generate-random': 'GET - Generate random input data'
         }
     })
+
+# הגדרת נתיבים להגשת קבצים סטטיים
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    # אם הנתיב מתחיל ב-api, אל תנסה להגיש קובץ סטטי
+    if path.startswith('api'):
+        return {'error': 'Not Found'}, 404
+        
+    # נסה להגיש קובץ ספציפי
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    # אחרת הגש את דף הבית
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/api/run-algorithm', methods=['POST'])
 def run_algorithm():
