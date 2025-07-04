@@ -174,18 +174,71 @@ const InputForm = () => {
     setError('');
   };
 
-  // Generate random input
-  const generateRandomInput = async () => {
+  // State for random options modal
+  const [showRandomOptions, setShowRandomOptions] = useState(false);
+  const [randomizeOption, setRandomizeOption] = useState('all');
+  const [numKids, setNumKids] = useState(3);
+  const [numPresents, setNumPresents] = useState(5);
+
+  // Open random options modal
+  const openRandomOptions = () => {
+    setShowRandomOptions(true);
+  };
+
+  // Close random options modal
+  const closeRandomOptions = () => {
+    setShowRandomOptions(false);
+  };
+
+  // Generate random input with selected options
+  const generateRandomInput = async (option = randomizeOption) => {
     try {
       setLoading(true);
       setError('');
       
+      // Create URL with query parameters
+      let url = 'http://localhost:5006/api/generate-random?';
+      url += `randomize_type=${option}`;
+      url += `&num_kids=${numKids}`;
+      url += `&num_presents=${numPresents}`;
+      
+      console.log(`Generating with params: type=${option}, kids=${numKids}, presents=${numPresents}`);
+      
+      // If we're doing partial randomization, pass the current data
+      if (option !== 'all') {
+        const currentData = JSON.stringify(formData);
+        url += `&current_data=${encodeURIComponent(currentData)}`;
+        console.log('Including current data for partial randomization');
+      }
+      
       // Get random data from the backend
-      const response = await axios.get('/api/generate-random');
+      console.log(`Sending request to: ${url}`);
+      const response = await axios.get(url);
+      
+      // Log what we received
+      console.log('Received data:', response.data);
+      console.log(`New data has ${response.data.kids.length} kids and ${response.data.presents.length} presents`);
+      
+      // Update form data with the response
       setFormData(response.data);
+      
+      // Close modal after generating
+      setShowRandomOptions(false);
     } catch (error) {
       console.error('Error generating random input:', error);
-      setError('Failed to generate random input. Please try again.');
+      // Show more detailed error message
+      let errorMessage = 'Failed to generate random input. Please try again.';
+      if (error.response) {
+        // The request was made and the server responded with an error status code
+        errorMessage = `Server error (${error.response.status}): ${JSON.stringify(error.response.data)}`;
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage = 'No response received from server. Is the backend running?';
+      } else {
+        // Something else happened
+        errorMessage = `Error: ${error.message}`;
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -258,7 +311,7 @@ const InputForm = () => {
       setError('');
       
       // Send the data to the backend
-      const response = await axios.post('/api/run-algorithm', formData);
+      const response = await axios.post('http://localhost:5006/api/run-algorithm', formData);
       
       console.log('Algorithm response received:', response.data);
       
@@ -381,7 +434,7 @@ const InputForm = () => {
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={generateRandomInput}
+            onClick={openRandomOptions}
             disabled={loading}
           >
             {loading ? 'Loading...' : 'Generate Random Input'}
@@ -394,6 +447,96 @@ const InputForm = () => {
             {loading ? 'Running...' : 'Run Algorithm'}
           </button>
         </div>
+        
+        {/* Random Options Modal */}
+        {showRandomOptions && (
+          <div className="modal show" style={{display: 'block', backgroundColor: 'rgba(0,0,0,0.5)'}}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Random Generation Options</h5>
+                  <button type="button" className="btn-close" onClick={closeRandomOptions}></button>
+                </div>
+                <div className="modal-body">
+                  <p>Choose what you want to randomize:</p>
+                  
+                  <div className="form-group mb-3">
+                    <label htmlFor="numKids">Number of Kids:</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="numKids"
+                      min="1"
+                      max="10"
+                      value={numKids}
+                      onChange={(e) => setNumKids(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                    />
+                    <small className="text-muted">Maximum: 10</small>
+                  </div>
+                  
+                  <div className="form-group mb-3">
+                    <label htmlFor="numPresents">Number of Presents:</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="numPresents"
+                      min="1"
+                      max="20"
+                      value={numPresents}
+                      onChange={(e) => setNumPresents(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                    />
+                    <small className="text-muted">Maximum: 20</small>
+                  </div>
+                  
+                  <p className="mt-3">What to randomize:</p>
+                  
+                  <div className="form-check mb-2">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="randomizeOption"
+                      id="randomize-all"
+                      value="all"
+                      checked={randomizeOption === 'all'}
+                      onChange={() => setRandomizeOption('all')}
+                    />
+                    <label className="form-check-label" htmlFor="randomize-all">
+                      Everything (kids, presents, and valuations)
+                    </label>
+                  </div>
+                  
+                  {/* האפשרויות "Only Kids" ו-"Only Presents" הוסרו בהתאם לבקשה */}
+                  
+                  <div className="form-check mb-2">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="randomizeOption"
+                      id="randomize-valuations"
+                      value="valuations"
+                      checked={randomizeOption === 'valuations'}
+                      onChange={() => setRandomizeOption('valuations')}
+                    />
+                    <label className="form-check-label" htmlFor="randomize-valuations">
+                      Only Valuations (keep kids and presents the same)
+                    </label>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={closeRandomOptions}>Cancel</button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary" 
+                    onClick={() => generateRandomInput()}
+                    disabled={loading}
+                  >
+                    {loading ? 'Generating...' : 'Generate'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

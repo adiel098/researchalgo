@@ -1,0 +1,29 @@
+algorithm_name,instance_size,timeout,seed,runtime,timed_out,min_happiness,total_happiness,fairness_ratio,error
+Main (α=3.0),5,60.0,42,1.2912909984588623,1,,,,float division by zero
+Main (α=3.0),10,60.0,42,2.3724021911621094,1,,,,list index out of range
+Main (α=3.0),15,60.0,42,3.9764046669006348,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Main (α=3.0),20,60.0,42,9.310664415359497,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Main (α=2.0),5,60.0,42,0.8827729225158691,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Main (α=2.0),10,60.0,42,2.8763632774353027,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Main (α=2.0),15,60.0,42,3.6785292625427246,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Main (α=2.0),20,60.0,42,8.778371095657349,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Main (α=4.0),5,60.0,42,0.8632705211639404,1,,,,float division by zero
+Main (α=4.0),10,60.0,42,2.4815597534179688,1,,,,list index out of range
+Main (α=4.0),15,60.0,42,9.190539360046387,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Main (α=4.0),20,60.0,42,10.402515888214111,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Max Value),5,60.0,42,0.0,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Max Value),10,60.0,42,0.000993967056274414,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Max Value),15,60.0,42,0.0,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Max Value),20,60.0,42,0.0015037059783935547,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Min Value),5,60.0,42,0.0005092620849609375,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Min Value),10,60.0,42,0.0015747547149658203,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Min Value),15,60.0,42,0.0,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Greedy (Min Value),20,60.0,42,0.001832723617553711,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Round Robin,5,60.0,42,0.0005154609680175781,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Round Robin,10,60.0,42,0.0010051727294921875,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Round Robin,15,60.0,42,0.001348733901977539,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Round Robin,20,60.0,42,0.0005030632019042969,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Random,5,60.0,42,0.0025281906127929688,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Random,10,60.0,42,0.0010066032409667969,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Random,15,60.0,42,0.0009922981262207031,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
+Random,20,60.0,42,0.0,1,,,,'AllocationBuilder' object has no attribute 'get_allocation'
