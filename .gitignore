@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Build artifacts
+frontend/build/
+dist/
+build/
+*.egg-info/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Cache files
+.cache/
+**/.cache/
+.history/
+
+# Local configuration
+.DS_Store
