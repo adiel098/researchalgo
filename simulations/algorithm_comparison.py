@@ -36,8 +36,14 @@ logger = logging.getLogger(__name__)
 # הדפסה ישירה לקונסול בנוסף ללוגר
 print("Starting algorithm comparison script...")
 
-# Input sizes to test
-COMPARISON_SIZES = [5, 10, 15, 20]
+# Input sizes to test - עם מספרים מותאמים כדי שהאלגוריתם המקורי יוכל להשלים
+COMPARISON_SIZES = [20, 25, 30, 35, 40]
+
+# Filter the algorithms to only include the original and improved Santa Claus algorithms
+FILTERED_ALGORITHMS = {
+    "Santa Claus (Original)": ALGORITHMS["Santa Claus (Original)"],
+    "Santa Claus (Improved)": ALGORITHMS["Santa Claus (Improved)"]
+}
 
 def run_comparison_experiment(timeout: float = 60.0, seed: int = 42) -> None:
     """
@@ -48,6 +54,7 @@ def run_comparison_experiment(timeout: float = 60.0, seed: int = 42) -> None:
         seed: Random seed for instance generation
     """
     print(f"Starting comparison experiment with timeout={timeout}s, seed={seed}")
+    print(f"Testing sizes: {COMPARISON_SIZES}")
     
     # Create results directory if it doesn't exist
     results_dir = os.path.join("simulations", "results")
@@ -56,6 +63,11 @@ def run_comparison_experiment(timeout: float = 60.0, seed: int = 42) -> None:
     
     # Create CSV file for results
     csv_file = os.path.join(results_dir, "algorithm_comparison.csv")
+    
+    # Remove existing file to start fresh
+    if os.path.exists(csv_file):
+        os.remove(csv_file)
+        print(f"Removed existing results file {csv_file}")
     
     # Set random seed
     random.seed(seed)
@@ -70,17 +82,20 @@ def run_comparison_experiment(timeout: float = 60.0, seed: int = 42) -> None:
     
     # Run experiments for each algorithm and instance size
     for size in COMPARISON_SIZES:
+        print(f"\n========== Running experiments for instance size {size} ==========")
         logger.info(f"Running experiments for instance size {size}")
         
         # Generate instance once for fair comparison
+        # הקטנת מספר הילדים עוד יותר - קבוע 3 ילדים לכל גודל קלט
         instance = generate_random_instance(
-            num_kids=max(2, size // 2),
+            num_kids=3,  # מספר קבוע של ילדים
             num_presents=size,
             max_value=100,
             kid_capacity=3
         )
         
-        for algo_name, algo_func in ALGORITHMS.items():
+        for algo_name, algo_func in FILTERED_ALGORITHMS.items():
+            print(f"  Running {algo_name} with instance size {size}...")
             logger.info(f"  Running {algo_name}...")
             
             try:
@@ -112,7 +127,11 @@ def run_comparison_experiment(timeout: float = 60.0, seed: int = 42) -> None:
                         min_happiness, total_happiness, fairness_ratio, seed
                     ])
                 
-                logger.info(f"  {algo_name} on size {size}: runtime={execution_time:.3f}s, timed_out={timed_out}")
+                result_str = f"  {algo_name} on size {size}: runtime={execution_time:.3f}s, timed_out={timed_out}"
+                if not timed_out:
+                    result_str += f", min_happiness={min_happiness:.2f}, total={total_happiness:.2f}"
+                print(result_str)
+                logger.info(result_str)
                 
             except Exception as e:
                 logger.error(f"Error running {algo_name} on instance size {size}: {e}")
@@ -144,12 +163,12 @@ def create_comparison_plots(csv_file: str, results_dir: str) -> None:
         logger.error(f"Error reading CSV file: {e}")
         return
     
-    metrics = ["runtime", "min_happiness", "total_happiness", "fairness_ratio"]
+    # הסרת fairness_ratio כפי שהתבקשנו
+    metrics = ["runtime", "min_happiness", "total_happiness"]
     titles = {
         "runtime": "Runtime Comparison of Allocation Algorithms",
         "min_happiness": "Minimum Happiness Comparison of Allocation Algorithms",
-        "total_happiness": "Total Happiness Comparison of Allocation Algorithms",
-        "fairness_ratio": "Fairness Ratio Comparison of Allocation Algorithms"
+        "total_happiness": "Total Happiness Comparison of Allocation Algorithms"
     }
     
     # Ensure the columns exist in the dataframe
@@ -158,20 +177,35 @@ def create_comparison_plots(csv_file: str, results_dir: str) -> None:
             logger.error(f"Column {metric} not found in CSV data")
             return
     
-    # Create plots
-    for metric in metrics:
-        plt.figure(figsize=(12, 8))
+    # Create simulations directory if it doesn't exist
+    simulations_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "simulations")
+    if not os.path.exists(simulations_dir):
+        os.makedirs(simulations_dir)
+        
+    # יצירת גרף מאוחד עם 3 תת-גרפים
+    fig, axes = plt.subplots(nrows=len(metrics), ncols=1, figsize=(14, 18))
+    
+    # Filter data to only include the original and improved algorithms
+    filtered_algos = ["Santa Claus (Original)", "Santa Claus (Improved)"]
+    df_filtered = df[df["algorithm_name"].isin(filtered_algos)]
+    
+    for i, metric in enumerate(metrics):
+        ax = axes[i]
         
         # Plot data by algorithm
-        for algo in df["algorithm_name"].unique():
-            algo_data = df[df["algorithm_name"] == algo]
+        for algo in filtered_algos:
+            if algo not in df_filtered["algorithm_name"].unique():
+                logger.warning(f"Algorithm {algo} not found in data")
+                continue
+                
+            algo_data = df_filtered[df_filtered["algorithm_name"] == algo]
             
             # For runtime, include timed out runs at the timeout value
             if metric == "runtime":
                 # Mark timed out points differently
                 timed_out_data = algo_data[algo_data["timed_out"] == 1]
                 if len(timed_out_data) > 0:
-                    plt.scatter(
+                    ax.scatter(
                         timed_out_data["instance_size"], 
                         timed_out_data["runtime"],
                         marker='x', s=100
@@ -180,36 +214,54 @@ def create_comparison_plots(csv_file: str, results_dir: str) -> None:
             # Regular plot for non-timed-out data
             valid_data = algo_data[~pd.isna(algo_data[metric])]
             if len(valid_data) > 0:
-                plt.plot(
-                    valid_data["instance_size"], 
+                # הגדרת סגנון שונה לכל אלגוריתם
+                line_style = '-'
+                line_width = 2
+                
+                # לאלגוריתם המקורי נשתמש בקו מקווקו ורחב יותר
+                if "Original" in algo:
+                    line_style = '--'
+                    line_width = 3
+                
+                # סיטות (היסטים) אם הערכים זהים בין האלגוריתמים
+                jitter = 0
+                if "Original" in algo and metric != "runtime":
+                    jitter = 0.3  # הזזת קו האלגוריתם המקורי ימינה כדי שלא יהיה מוסתר
+                
+                # Plot the line
+                ax.plot(
+                    valid_data['instance_size'] + jitter,  # הוספת היסט למיקום הקו בציר X
                     valid_data[metric], 
-                    marker='o', 
+                    marker='o',
+                    linestyle=line_style,
+                    linewidth=line_width,
                     label=algo
                 )
         
         # Add title and labels
-        plt.title(titles[metric])
-        plt.xlabel("Instance Size (Number of Presents)")
+        ax.set_title(titles[metric], fontsize=16)
+        ax.set_xlabel("Instance Size (Number of Presents)", fontsize=12)
         
         if metric == "runtime":
-            plt.ylabel("Runtime (seconds)")
-            plt.yscale("log")  # Log scale for runtime
+            ax.set_ylabel("Runtime (seconds)", fontsize=12)
+            ax.set_yscale("log")  # Log scale for runtime
         elif metric == "min_happiness":
-            plt.ylabel("Minimum Happiness")
+            ax.set_ylabel("Minimum Happiness", fontsize=12)
         elif metric == "total_happiness":
-            plt.ylabel("Total Happiness")
-        elif metric == "fairness_ratio":
-            plt.ylabel("Fairness Ratio")
-            plt.ylim(0, 1.1)  # Fairness ratio is between 0 and 1
+            ax.set_ylabel("Total Happiness", fontsize=12)
         
-        # Add legend
-        plt.legend()
-        plt.grid(True)
-        
-        # Save plot
-        plot_file = os.path.join(results_dir, f"algorithm_comparison_{metric}.png")
-        plt.savefig(plot_file)
-        logger.info(f"Saved plot to {plot_file}")
+        ax.legend(fontsize=12)
+        ax.grid(True)
+    
+    plt.tight_layout(pad=3.0)
+    
+    # Save combined plot
+    combined_plot_file = os.path.join(simulations_dir, "algorithm_comparison_combined.png")
+    plt.savefig(combined_plot_file)
+    logger.info(f"Saved combined plot to {combined_plot_file}")
+    
+    # סגירת הגרף כדי לשחרר זיכרון
+    plt.close(fig)
 
 
 def find_best_algorithms(csv_file: str) -> None:
@@ -275,7 +327,8 @@ def main():
     
     # Force new experiments to include the improved algorithm
     print("Running new experiments with the improved algorithm...")
-    run_comparison_experiment(timeout=60.0)
+    # הגדלת זמן ה-timeout ל-600 שניות (10 דקות) כדי לאפשר לאלגוריתם המקורי לעבוד על קלטים גדולים יותר
+    run_comparison_experiment(timeout=600.0)
     create_comparison_plots(csv_file, results_dir)
     find_best_algorithms(csv_file)
     
