@@ -3,3 +3,4 @@ Flask-CORS==4.0.0
 numpy==1.26.0
 networkx==3.2.1
 pulp==2.7.0
+csv-experiments==0.1.1

@@ -1,0 +1,18 @@
+         43742 function calls in 0.047 seconds
+
+   Ordered by: cumulative time
+   List reduced from 23 to 10 due to restriction <10>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.004    0.004    0.047    0.047 C:\Users\Roi\Desktop\researchalgo\simulations\ImprovedAlgo\santa_claus_solver_original.py:25(santa_claus_solver)
+    13600    0.009    0.000    0.033    0.000 C:\Users\Roi\Desktop\researchalgo\simulations\ImprovedAlgo\santa_claus_solver_original.py:22(agent_item_value)
+      400    0.002    0.000    0.032    0.000 {built-in method builtins.max}
+     4000    0.004    0.000    0.031    0.000 C:\Users\Roi\Desktop\researchalgo\simulations\ImprovedAlgo\santa_claus_solver_original.py:87(<lambda>)
+    13600    0.024    0.000    0.024    0.000 {method 'get' of 'dict' objects}
+      420    0.001    0.000    0.007    0.000 {built-in method builtins.sum}
+        1    0.000    0.000    0.007    0.007 {built-in method builtins.sorted}
+      400    0.000    0.000    0.007    0.000 C:\Users\Roi\Desktop\researchalgo\simulations\ImprovedAlgo\santa_claus_solver_original.py:74(<lambda>)
+     4400    0.002    0.000    0.006    0.000 C:\Users\Roi\Desktop\researchalgo\simulations\ImprovedAlgo\santa_claus_solver_original.py:74(<genexpr>)
+     4004    0.001    0.000    0.001    0.000 {built-in method builtins.len}
+
+
