@@ -88,7 +88,7 @@ def greedy_max_value_algorithm(instance: Instance) -> Dict[str, List[str]]:
         )
         
         # Get the agent's current allocation
-        current_allocation = alloc.get_allocation().get(best_agent, [])
+        current_allocation = alloc.allocation.get(best_agent, [])
         
         # Check if the agent has capacity for one more item
         if len(current_allocation) < instance.agent_capacities.get(best_agent, float('inf')):
@@ -127,7 +127,7 @@ def greedy_min_value_algorithm(instance: Instance) -> Dict[str, List[str]]:
         # Find eligible agents (those who haven't reached capacity)
         eligible_agents = [
             agent for agent in instance.agents
-            if len(alloc.get_allocation().get(agent, [])) < instance.agent_capacities.get(agent, float('inf'))
+            if len(alloc.allocation.get(agent, [])) < instance.agent_capacities.get(agent, float('inf'))
         ]
         
         if not eligible_agents:
@@ -396,9 +396,34 @@ def ef1_allocation_algorithm(instance: Instance) -> Dict[str, List[str]]:
 #     
 #     # Run the fairpyx maximin algorithm
 
+# Santa Claus Improved algorithm implementation
+def improved_santa_claus_algorithm(instance) -> Dict[str, List[str]]:
+    """
+    Improved Santa Claus algorithm with better performance for larger instances:
+    1. Optimized configuration generation strategy
+    2. Limited maximum configurations per agent
+    3. Improved LP solver with time limits
+    
+    Args:
+        instance: The instance to solve
+        
+    Returns:
+        A dictionary mapping each kid to their allocated presents
+    """
+    # Import improved version
+    from backend.santa_claus.improved_algorithm import santa_claus_improved_wrapper
+    from backend.santa_claus.core import AllocationBuilder
+    
+    # Create allocation builder
+    alloc = AllocationBuilder(instance)
+    
+    # Run improved algorithm (max_configs=2000 to limit configuration space)
+    return santa_claus_improved_wrapper(alloc, max_configs=2000)
+
 # Dictionary mapping algorithm names to their implementations
 ALGORITHMS = {
-    "Santa Claus": lambda instance: main_algorithm(instance, alpha=3.0),
+    "Santa Claus (Original)": lambda instance: main_algorithm(instance, alpha=3.0),
+    "Santa Claus (Improved)": improved_santa_claus_algorithm,
     "Leximin": leximin_allocation_algorithm,
     "EF1": ef1_allocation_algorithm,
     "Greedy (Max Value)": greedy_max_value_algorithm,

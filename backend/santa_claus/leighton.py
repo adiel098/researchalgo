@@ -8,11 +8,23 @@ for solving small instances of the set system and verifying function quality.
 import logging
 import random
 import networkx as nx
+import sys
+import codecs
 from typing import Dict, List, Set, Tuple, Optional, Any
 from .sampling import SetSystem
 
-# Setup logger
+# Setup logger with Unicode support
 logger = logging.getLogger(__name__)
+
+# Configure Unicode handling for logging on Windows
+if sys.platform == 'win32':
+    # Ensure stdout can handle Unicode
+    if sys.stdout.encoding != 'utf-8':
+        sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
+    # Configure handlers to use UTF-8 where possible
+    for handler in logging.root.handlers:
+        if hasattr(handler, 'stream') and hasattr(handler.stream, 'reconfigure'):
+            handler.stream.reconfigure(encoding='utf-8', errors='backslashreplace')
 
 def apply_leighton_algorithm(system: SetSystem) -> Dict[int, int]:
     """
@@ -32,9 +44,19 @@ def apply_leighton_algorithm(system: SetSystem) -> Dict[int, int]:
     # Implementation note: For practical purposes, we'll use a randomized approach 
     # with verification, rather than the full derandomized Lovász Local Lemma algorithm
     
-    max_attempts = 1000  # Limit number of attempts
+    max_attempts = 100  # Reduced max attempts to prevent excessive logging
     best_f = None
     best_quality = float('-inf')
+    
+    # Calculate beta once outside the loop
+    gamma = 1.0  # Target value for load factor
+    beta_estimate = (system.eta * system.k * system.l) / system.p  # Theoretical estimate
+    beta = max(1, int(beta_estimate) + 1)  # Round up and ensure at least 1
+    
+    logger.info(f"Starting search with gamma={gamma}, beta={beta}, eta={system.eta}, k={system.k}, l={system.l}, p={system.p}")
+    
+    # We'll log less frequently to avoid excessive output
+    log_frequency = max(1, max_attempts // 10)  
     
     for attempt in range(max_attempts):
         # Generate a random function f
@@ -48,15 +70,14 @@ def apply_leighton_algorithm(system: SetSystem) -> Dict[int, int]:
             else:
                 f[i] = random.choice(valid_indices)
         
-        # Verify function quality
-        gamma = 1.0  # Target value for load factor
-        beta_estimate = (system.eta * system.k * system.l) / system.p  # Theoretical estimate
-        beta = int(beta_estimate) + 1  # Round up to ensure integer
+        # Only log verification at specific intervals
+        should_log = (attempt % log_frequency == 0) or (attempt == max_attempts - 1) 
         
-        is_good, _ = verify_function_quality(system, f, gamma, beta)
+        # Verify function quality
+        is_good, subset_dict = verify_function_quality(system, f, gamma, beta, should_log)
         
         if is_good:
-            logger.info(f"Found good function after {attempt+1} attempts with β={beta}")
+            logger.info(f"Found good function after {attempt+1} attempts with beta={beta}")
             return f
         
         # If not good, evaluate how close we are to being good
@@ -64,6 +85,10 @@ def apply_leighton_algorithm(system: SetSystem) -> Dict[int, int]:
         if quality_score > best_quality:
             best_quality = quality_score
             best_f = f.copy()
+            
+        # Only log progress at intervals
+        if should_log:
+            logger.info(f"Attempt {attempt+1}/{max_attempts}, best quality so far: {best_quality:.4f}")
     
     logger.warning(f"Could not find optimal function after {max_attempts} attempts")
     logger.warning(f"Using best found function with quality score {best_quality}")
@@ -72,7 +97,7 @@ def apply_leighton_algorithm(system: SetSystem) -> Dict[int, int]:
 
 
 def verify_function_quality(system: SetSystem, f: Dict[int, int], 
-                            gamma: float, beta: int) -> Tuple[bool, Dict[int, Set[str]]]:
+                            gamma: float, beta: int, should_log: bool = True) -> Tuple[bool, Dict[int, Set[str]]]:
     """
     Verifies if a function is (γ,β)-good for the set system using network flow.
     
@@ -83,9 +108,11 @@ def verify_function_quality(system: SetSystem, f: Dict[int, int],
     :param f: Function mapping collections to set indices
     :param gamma: Load factor parameter
     :param beta: Congestion parameter
+    :param should_log: Whether to log info messages during verification
     :return: Tuple of (is_good, subset_dict) where subset_dict maps collections to subsets
     """
-    logger.info(f"Verifying function quality with γ={gamma}, β={beta}")
+    if should_log:
+        logger.info(f"Verifying function quality with gamma={gamma}, beta={beta}")
     
     # Construct network flow instance
     G = nx.DiGraph()
@@ -108,19 +135,33 @@ def verify_function_quality(system: SetSystem, f: Dict[int, int],
         # Edge from element to sink with capacity beta
         G.add_edge(f"U_{elem}", sink, capacity=beta)
     
+    # Check if the network would be empty
+    edges_added = 0
+    
     # Add edges from collections to elements based on selected sets
     for i in system.collections:
         j = f.get(i, 0)  # Get selected set index, default to 0
         selected_set = system.get_set(i, j)
         for elem in selected_set:
             G.add_edge(f"V_{i}", f"U_{elem}", capacity=1)
+            edges_added += 1
+    
+    # If no edges were added between collections and elements,
+    # we know the max flow will be 0
+    if edges_added == 0:
+        if should_log:
+            logger.warning("Network has no edges between collections and elements")
+            logger.info(f"Max flow: 0, Target flow: {max(1, int(system.k * len(system.collections) / gamma))}")
+            logger.info(f"Function is not ({gamma},{beta})-good")
+        return False, {}
     
     # Compute maximum flow
     try:
         max_flow_value = nx.maximum_flow_value(G, source, sink)
         target_flow = max(1, int(system.k * len(system.collections) / gamma))
         
-        logger.info(f"Max flow: {max_flow_value}, Target flow: {target_flow}")
+        if should_log:
+            logger.info(f"Max flow: {max_flow_value}, Target flow: {target_flow}")
         
         if max_flow_value >= target_flow:
             # Extract the selected subsets from the flow
@@ -138,10 +179,12 @@ def verify_function_quality(system: SetSystem, f: Dict[int, int],
                         subset.add(elem)
                 subset_dict[i] = subset
             
-            logger.info(f"Function is ({gamma},{beta})-good")
+            if should_log:
+                logger.info(f"Function is ({gamma},{beta})-good")
             return True, subset_dict
         else:
-            logger.info(f"Function is not ({gamma},{beta})-good")
+            if should_log:
+                logger.info(f"Function is not ({gamma},{beta})-good")
             return False, {}
     
     except nx.NetworkXError:

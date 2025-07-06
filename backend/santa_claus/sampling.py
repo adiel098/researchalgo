@@ -41,7 +41,7 @@ class SetSystem:
         self.collections = []     # List of collections (super-machines)
         self.sets = {}            # Maps (i, j) -> subset of ground set
         
-        logger.info(f"Created set system with parameters: k={k}, l={l}, p={p}, η={eta}")
+        logger.info(f"Created set system with parameters: k={k}, l={l}, p={p}, eta={eta}")
     
     def add_element(self, element: str) -> None:
         """Adds an element to the ground set."""
