@@ -197,7 +197,7 @@ const InputForm = () => {
       setError('');
       
       // Create URL with query parameters
-      let url = 'http://localhost:5006/api/generate-random?';
+      let url = '/api/generate-random?';
       url += `randomize_type=${option}`;
       url += `&num_kids=${numKids}`;
       url += `&num_presents=${numPresents}`;
@@ -311,7 +311,7 @@ const InputForm = () => {
       setError('');
       
       // Send the data to the backend
-      const response = await axios.post('http://localhost:5006/api/run-algorithm', formData);
+      const response = await axios.post('/api/run-algorithm', formData);
       
       console.log('Algorithm response received:', response.data);
       
